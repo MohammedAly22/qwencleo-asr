@@ -1,0 +1,13 @@
+# Requirements for the clone-and-serve path (server + Gradio app).
+# For plain inference / streaming just `pip install qwencleo-asr`.
+numpy
+soundfile
+huggingface_hub
+
+# server
+fastapi
+uvicorn[standard]
+python-multipart
+
+# gradio app
+gradio>=4.0

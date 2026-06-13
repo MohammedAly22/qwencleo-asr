@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "qwencleo-asr"
+version = "0.1.0"
+description = "QwenCleo-ASR — Egyptian Arabic & code-switching speech recognition, built on Qwen3-ASR."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Mohammed Aly" }]
+keywords = ["asr", "speech-recognition", "arabic", "egyptian", "code-switching", "qwen"]
+
+# Runtime deps for plain inference + streaming. Heavy serving extras are opt-in.
+dependencies = [
+    "qwen-asr>=0.0.6",
+    "torch>=2.5",
+    "torchaudio>=2.5",
+    "numpy",
+    "soundfile",
+    "huggingface_hub",
+]
+
+[project.optional-dependencies]
+# `pip install qwencleo-asr[server]` for FastAPI serving.
+server = ["fastapi", "uvicorn[standard]", "python-multipart"]
+# `pip install qwencleo-asr[app]` for the Gradio demo.
+app = ["gradio>=4.0"]
+# `pip install qwencleo-asr[vllm]` for the vLLM backend (see README caveats).
+vllm = ["vllm>=0.6.0"]
+# everything
+all = ["fastapi", "uvicorn[standard]", "python-multipart", "gradio>=4.0"]
+
+[project.urls]
+Homepage = "https://huggingface.co/mohammedaly22/QwenCleo-ASR"
+"Model Card" = "https://huggingface.co/mohammedaly22/QwenCleo-ASR"
+
+[project.scripts]
+qwencleo = "qwencleo_asr.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+qwencleo_asr = ["py.typed"]
