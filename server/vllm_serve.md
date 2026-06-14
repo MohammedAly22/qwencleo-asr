@@ -13,6 +13,12 @@ upstream docs say `Qwen/Qwen3-ASR-1.7B`, use `mohammedaly22/QwenCleo-ASR`.
 
 ## Install vLLM
 
+> ⚠️ **CUDA 13 required.** The vLLM **nightly** that carries Qwen3-ASR support is
+> built against **CUDA 13** (`libcudart.so.13`). On a CUDA 12.x box it fails to
+> import (`ImportError: libcudart.so.13`). Run vLLM on a CUDA-13 runtime; on
+> CUDA 12.x use the [FastAPI server](app.py) instead — it needs no vLLM and gives
+> the same transcriptions (just without token-by-token streaming).
+
 vLLM provides day-0 support for the Qwen3-ASR architecture. Use the **nightly**
 wheel (recommended via `uv`):
 
