@@ -76,7 +76,7 @@ fidelity, and keeping English terms in Latin script.
 
 **Short**
 
-> **✅ Ground truth** ااه بحس ستايله حلو شكله كاريزما وهو بيلعب 
+> **✅ Ground truth** ااه بحس ستايله حلو وشكله حلو كاريزما وهو بيلعب 
 
 | Model | Output |
 |---|---|
