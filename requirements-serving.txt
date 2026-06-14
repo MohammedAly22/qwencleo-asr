@@ -1,13 +1,21 @@
-# Requirements for the clone-and-serve path (server + Gradio app).
-# For plain inference / streaming just `pip install qwencleo-asr`.
-numpy
-soundfile
-huggingface_hub
+# Extra packages for the clone-and-serve path (FastAPI server + Gradio app +
+# vLLM client examples). These are ONLY the serving-specific deps — torch,
+# qwen-asr, numpy, soundfile, huggingface_hub already come with the base
+# `pip install qwencleo-asr` (or `pip install -e .`), so they are not repeated.
 
-# server
+# FastAPI server
 fastapi
 uvicorn[standard]
 python-multipart
 
-# gradio app
+# Gradio demo
 gradio>=4.0
+
+# vLLM client (for stream_vllm / transcribe_vllm examples against a vLLM server)
+openai
+httpx
+
+# NOTE: vLLM itself is NOT listed here — install the nightly build separately,
+# see server/vllm_serve.md:
+#   uv pip install -U vllm --pre --extra-index-url https://wheels.vllm.ai/nightly/cu129 ...
+#   uv pip install "vllm[audio]"

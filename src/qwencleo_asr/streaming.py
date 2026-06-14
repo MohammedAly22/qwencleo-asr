@@ -1,13 +1,19 @@
-"""Chunked / streaming transcription for long audio.
+"""Chunked transcription for long audio.
 
-Qwen3-ASR is an attention-based encoder-decoder; it transcribes a whole clip at
-once rather than emitting tokens incrementally. For long files or live mic
-input we therefore stream by *windowing* the audio: split into overlapping
-chunks, transcribe each, and yield partial text as it is produced.
+NOTE — this is NOT true low-latency streaming. Qwen3-ASR (the base model) *does*
+support genuine token-by-token streaming, but only through the **vLLM backend**
+(see `server/vllm_serve.md` and the Qwen3-ASR streaming example). What this
+module provides instead is *chunked transcription*: long or live audio is split
+into overlapping windows and each window is transcribed with the regular
+`transcribe()` call, yielding partial text window by window. This is convenient
+for captioning long files without a vLLM server, but latency is per-window, not
+per-token.
+
+For real streaming, run the vLLM backend.
 
 Two entry points:
-  * stream_file(asr, path)  -> generator of partial transcripts for a long file
-  * StreamingSession(asr)   -> feed raw audio frames (e.g. from a mic) and pull
+  * stream_file(asr, path)  -> generator of per-window transcripts for a long file
+  * ChunkedSession(asr)     -> feed raw audio frames (e.g. from a mic) and pull
                                transcripts as enough audio accumulates
 """
 from __future__ import annotations
@@ -95,13 +101,14 @@ def stream_file(
 
 
 @dataclass
-class StreamingSession:
+class ChunkedSession:
     """Accumulate raw audio frames (e.g. from a microphone) and transcribe once
-    enough audio has buffered. Suitable for near-real-time captioning.
+    enough audio has buffered. Near-real-time captioning by *chunking* — latency
+    is per-window, not per-token. For true streaming use the vLLM backend.
 
     Usage
     -----
-    >>> sess = StreamingSession(asr, sr=16000)
+    >>> sess = ChunkedSession(asr, sr=16000)
     >>> for frame in mic_frames():        # np.ndarray float32 mono @ sr
     ...     for chunk in sess.add(frame):
     ...         print(chunk.text)
@@ -142,3 +149,8 @@ class StreamingSession:
         self._buf.clear()
         self._buffered = 0
         yield chunk
+
+
+# Backwards-compatible alias. ChunkedSession is the accurate name; the old name
+# is kept so existing imports keep working.
+StreamingSession = ChunkedSession

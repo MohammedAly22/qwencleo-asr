@@ -26,8 +26,9 @@
 - 🎯 **Egyptian dialect** — tuned on hundreds of hours of Egyptian podcast speech.
 - 🔀 **Code-switching** — keeps English terms in `code`-script, Arabic in Arabic.
 - 🥇 **State-of-the-art (open)** — beats Qwen3-ASR base, NVIDIA Nemotron, Cohere, and every Whisper variant on our Egyptian + CS test set.
-- 📦 **`pip install qwencleo-asr`** — inference & streaming in three lines.
-- 🚀 **Serving** — FastAPI server, Gradio demo, and vLLM instructions included.
+- 📦 **`pip install qwencleo-asr`** — inference & chunked long-audio transcription in three lines.
+- ⚡ **Real streaming** — token-by-token via vLLM (`asr.stream(...)`), plus a mic web demo.
+- 🚀 **Serving** — FastAPI server, Gradio demo, OpenAI-compatible vLLM endpoint.
 
 ---
 
@@ -121,32 +122,55 @@ the other models transliterate English into broken Arabic or drop words entirely
 
 ## 📦 Installation
 
-### For inference & streaming (PyPI)
+> **Install the right torch first.** A plain `pip install` pulls the newest torch
+> (built for the latest CUDA), which fails on older drivers with *"NVIDIA driver
+> too old"*. Install a torch build matching **your** driver **before** the package,
+> then add QwenCleo with `--no-deps` so torch is never reinstalled.
+>
+> Pick the wheel index for your CUDA driver — `cu121` (driver ≥ 12.1, e.g. CUDA 12.2),
+> `cu118` (driver ≥ 11.8), or `cpu`. Check yours with `nvidia-smi`.
+
+### For inference & chunked transcription (PyPI)
 
 ```bash
-conda create -n qwencleo-asr python=3.12.12
+conda create -n qwencleo-asr python=3.12 -y
 conda activate qwencleo-asr
-pip install qwencleo-asr
+
+# 1) torch matching your driver (cu121 shown — change the index for yours)
+pip install torch==2.5.1 torchaudio==2.5.1 \
+  --index-url https://download.pytorch.org/whl/cu121
+
+# 2) QwenCleo without touching torch, then its remaining deps
+pip install qwencleo-asr --no-deps
+pip install "qwen-asr>=0.0.6" numpy soundfile huggingface_hub
 ```
 
-That's all you need for the Python API and the `qwencleo` CLI. It pulls in
-[`qwen-asr`](https://pypi.org/project/qwen-asr/), torch, and torchaudio.
+That's all you need for the Python API and the `qwencleo` CLI.
 
-> **CUDA note:** install a torch build matching your driver:
-> ```bash
-> pip install torch==2.5.1 torchaudio==2.5.1 torchvision==0.20.1 \
->   --index-url https://download.pytorch.org/whl/cu121
-> ```
 
 ### For serving / Gradio / vLLM (clone the repo)
 
 ```bash
-conda create -n qwencleo-asr python=3.12.12
+conda create -n qwencleo-asr python=3.12 -y
 conda activate qwencleo-asr
-git clone https://github.com/mohammedaly22/qwencleo-asr.git
+
+# 1) torch matching your driver, first
+pip install torch==2.5.1 torchaudio==2.5.1 \
+  --index-url https://download.pytorch.org/whl/cu121
+
+# 2) the repo (without re-resolving torch) + serving deps
+git clone https://github.com/MohammedAly22/qwencleo-asr.git
 cd qwencleo-asr
-pip install -e .
+pip install -e . --no-deps
+pip install "qwen-asr>=0.0.6" numpy soundfile huggingface_hub
 pip install -r requirements-serving.txt
+```
+
+Verify torch sees the GPU before running:
+
+```bash
+python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+# -> 2.5.1+cu121 True
 ```
 
 ---
@@ -170,7 +194,7 @@ results = asr.transcribe(["a.wav", "b.wav"], language=None)   # auto-detect
 clean   = asr.transcribe("clip.wav", normalize=True)          # normalized text
 ```
 
-### Python — streaming long audio / mic
+### Python — chunked transcription of long audio / mic
 
 ```python
 from qwencleo_asr import QwenCleoASR, stream_file
@@ -180,8 +204,42 @@ for chunk in stream_file(asr, "long_podcast.wav", chunk_s=20, overlap_s=2):
     print(f"[{chunk.start:.0f}-{chunk.end:.0f}s] {chunk.text}")
 ```
 
-> ℹ️ Qwen3-ASR is a non-streaming encoder-decoder, so "streaming" here means
-> **overlapped chunking** — the practical way to caption long or live audio.
+> ℹ️ **This is chunked transcription, not true streaming.** It splits long/live
+> audio into overlapping windows and transcribes each — convenient for captioning
+> without a server, but latency is per-window. For genuine **token-by-token
+> streaming**, use the vLLM path below.
+
+### Python — true streaming (vLLM)
+
+QwenCleo inherits Qwen3-ASR's **real token-by-token streaming** via vLLM. Start a
+server (see [`server/vllm_serve.md`](server/vllm_serve.md)):
+
+```bash
+pip install "qwencleo-asr[vllm]"          # vLLM nightly recommended — see docs
+vllm serve mohammedaly22/QwenCleo-ASR
+```
+
+Then stream straight off the model object — deltas arrive as they're generated:
+
+```python
+from qwencleo_asr import QwenCleoASR
+
+asr = QwenCleoASR()
+for delta in asr.stream("clip.wav"):       # talks to the vLLM server
+    print(delta, end="", flush=True)
+```
+
+Or use the helpers directly:
+
+```python
+from qwencleo_asr import stream_vllm, transcribe_vllm, VLLMOffline
+
+for delta in stream_vllm("clip.wav", language="Arabic"):
+    print(delta, end="", flush=True)
+
+print(transcribe_vllm("clip.wav"))         # one-shot via the server
+print(VLLMOffline().transcribe("clip.wav"))  # in-process, no server
+```
 
 ### CLI
 
@@ -210,13 +268,33 @@ curl -X POST http://localhost:8000/v1/transcribe -F file=@clip.wav -F language=A
 python app/gradio_app.py        # http://localhost:7860  (mic + file upload)
 ```
 
-### vLLM
+### vLLM — serving, streaming & OpenAI-compatible API
 
-See **[`server/vllm_serve.md`](server/vllm_serve.md)**:
+Full guide in **[`server/vllm_serve.md`](server/vllm_serve.md)**. In short:
 
 ```bash
-pip install "qwencleo-asr[vllm]"
-vllm serve mohammedaly22/QwenCleo-ASR --task transcription --dtype bfloat16 --port 8000
+pip install "qwencleo-asr[vllm]"           # vLLM nightly recommended (see docs)
+vllm serve mohammedaly22/QwenCleo-ASR
+```
+
+OpenAI-compatible transcription:
+
+```python
+from openai import OpenAI
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="EMPTY")
+print(client.audio.transcriptions.create(
+    model="mohammedaly22/QwenCleo-ASR", file=open("clip.wav","rb").read()).text)
+```
+
+### Streaming mic web demo
+
+Live browser-mic transcription via the upstream Flask demo:
+
+```bash
+qwen-asr-demo-streaming \
+  --asr-model-path mohammedaly22/QwenCleo-ASR \
+  --host 0.0.0.0 --port 8000 --gpu-memory-utilization 0.9
+# open http://<your-ip>:8000
 ```
 
 ---

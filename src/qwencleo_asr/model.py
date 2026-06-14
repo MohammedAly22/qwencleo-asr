@@ -121,3 +121,40 @@ class QwenCleoASR:
 
     # convenience alias
     __call__ = transcribe
+
+    # ------------------------------------------------------------------ #
+    def stream(
+        self,
+        audio: str,
+        *,
+        base_url: str = "http://localhost:8000/v1",
+        language: Optional[str] = "__default__",
+        model_id: Optional[str] = None,
+        max_tokens: int = 256,
+    ):
+        """TRUE token-by-token streaming via a running vLLM server.
+
+        Start the server first (see server/vllm_serve.md):
+
+            vllm serve mohammedaly22/QwenCleo-ASR
+
+        Then:
+
+            asr = QwenCleoASR()
+            for delta in asr.stream("clip.wav"):
+                print(delta, end="", flush=True)
+
+        Unlike `transcribe()` (which runs the local HF model) this connects to
+        the vLLM OpenAI-compatible endpoint and yields text as it is generated.
+        """
+        from .vllm_backend import stream_vllm
+
+        if language == "__default__":
+            language = self.default_language
+        return stream_vllm(
+            audio,
+            base_url=base_url,
+            model=model_id or self.model_id,
+            language=language,
+            max_tokens=max_tokens,
+        )

@@ -51,9 +51,19 @@ model-index:
 
 ---
 
-> **QwenCleo** — the name carries three meanings: **Qwen**, the powerful base model it is built on; **Queen**, signalling a model that reigns over its domain; and **Cleo**, for **Cleopatra**, the queen of Egypt — because this model is tailored for **Egyptian** Arabic.
+<p align="center">
+  <b>QwenCleo</b> — the name carries three meanings: <b>Qwen</b>, the powerful base model it is built on;
+  <b>Queen</b>, signalling a model that reigns over its domain; and <b>Cleo</b>, for <b>Cleopatra</b>,
+  the queen of Egypt — because this model is tailored for <b>Egyptian</b> Arabic. 👑🏺
+</p>
 
-**QwenCleo-ASR is, to our knowledge, the best open-source ASR model for Egyptian Arabic and Arabic/English code-switching.** It cuts the error rate of the strong Qwen3-ASR base **roughly in half**, and correctly keeps embedded English tech/loan words in Latin script (`engineering`, `download`, `React`, `at least`) instead of mangling them into broken Arabic.
+<p align="center">
+  <b>QwenCleo-ASR is, to our knowledge, the best open-source ASR model for Egyptian Arabic and
+  Arabic/English code-switching.</b> It cuts the error rate of the strong Qwen3-ASR base
+  <b>roughly in half</b>, and correctly keeps embedded English tech/loan words in Latin script
+  (<code>engineering</code>, <code>download</code>, <code>React</code>, <code>at least</code>)
+  instead of mangling them into broken Arabic.
+</p>
 
 ---
 
@@ -85,12 +95,45 @@ print(result[0].text)
 
 ---
 
-## 📊 Results
+## ⚡ Streaming & serving (vLLM)
 
-WER / CER (%) on an Egyptian-Arabic + code-switching test set (3,699 utterances).
-**Lower is better.** All models scored with the same Egyptian-aware normalization.
+QwenCleo inherits Qwen3-ASR's **true token-by-token streaming** via vLLM. Start a
+server, then stream straight off the model:
 
-![Benchmark overview](assets/QwenCleo-ASR-Benchmark.png)
+```bash
+pip install "qwencleo-asr[vllm]"          # vLLM nightly recommended
+vllm serve mohammedaly22/QwenCleo-ASR
+```
+
+```python
+from qwencleo_asr import QwenCleoASR
+
+asr = QwenCleoASR()
+for delta in asr.stream("clip.wav"):       # real streaming via the vLLM server
+    print(delta, end="", flush=True)
+```
+
+OpenAI-compatible transcription, a live **mic web demo**
+(`qwen-asr-demo-streaming`), offline `VLLMOffline`, and cURL examples are in the
+[vLLM serving guide](https://github.com/MohammedAly22/qwencleo-asr/blob/main/server/vllm_serve.md).
+
+> For captioning long files **without** a server, `stream_file(...)` does chunked
+> (windowed) transcription — convenient, but latency is per-window, not per-token.
+
+---
+
+<h2 align="center">📊 Results</h2>
+
+<p align="center">
+  WER / CER (%) on an Egyptian-Arabic + code-switching test set (3,699 utterances).<br/>
+  <b>Lower is better.</b> All models scored with the same Egyptian-aware normalization.
+</p>
+
+<p align="center">
+  <img src="assets/QwenCleo-ASR-Benchmark.png" alt="Benchmark overview" width="100%"/>
+</p>
+
+<div align="center">
 
 | Model | Params | WER all | CER all | WER · AR | CER · AR | WER · CS | CER · CS |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -106,6 +149,7 @@ WER / CER (%) on an Egyptian-Arabic + code-switching test set (3,699 utterances)
 | Whisper Small | 0.24B | 89.99 | 60.34 | 77.42 | 42.53 | 87.09 | 55.22 |
 | Whisper Tiny | 0.04B | 124.68 | 89.42 | 116.02 | 77.74 | 110.67 | 74.57 |
 
+</div>
 
 ---
 

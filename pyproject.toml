@@ -27,10 +27,15 @@ dependencies = [
 server = ["fastapi", "uvicorn[standard]", "python-multipart"]
 # `pip install qwencleo-asr[app]` for the Gradio demo.
 app = ["gradio>=4.0"]
-# `pip install qwencleo-asr[vllm]` for the vLLM backend (see README caveats).
-vllm = ["vllm>=0.6.0"]
-# everything
-all = ["fastapi", "uvicorn[standard]", "python-multipart", "gradio>=4.0"]
+# `pip install qwencleo-asr[vllm]` for the vLLM backend + client.
+# NOTE: for Qwen3-ASR/QwenCleo the vLLM *nightly* is recommended — see
+# server/vllm_serve.md. This floor is for the client helpers to work.
+vllm = ["vllm>=0.6.0", "openai", "httpx"]
+# client-only (talk to an existing vLLM server without installing vllm itself)
+vllm-client = ["openai", "httpx"]
+# everything (serving + app + vllm client; not vllm itself)
+all = ["fastapi", "uvicorn[standard]", "python-multipart", "gradio>=4.0",
+       "openai", "httpx"]
 
 [project.urls]
 Homepage = "https://huggingface.co/mohammedaly22/QwenCleo-ASR"

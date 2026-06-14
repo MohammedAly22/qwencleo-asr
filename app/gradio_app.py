@@ -48,7 +48,7 @@ with gr.Blocks(
 ) as demo:
     gr.Markdown(
         f"""
-        # 🏺 QwenCleo-ASR
+        # 🎙️ QwenCleo-ASR
         Egyptian Arabic & code-switching speech recognition — built on Qwen3-ASR.
         <span style="color:{GOLD}">**Tuned for Egyptian dialect + Arabic/English code-switching.**</span>
         """

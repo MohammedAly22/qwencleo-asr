@@ -26,7 +26,8 @@ def main(argv=None):
     _add_common(t)
     t.add_argument("audio", nargs="+", help="Audio file path(s) or URL(s).")
 
-    s = sub.add_parser("stream", help="Chunked streaming transcription of a long file.")
+    s = sub.add_parser("stream", help="Chunked transcription of a long file "
+                       "(windowed; not true streaming — use vLLM for that).")
     _add_common(s)
     s.add_argument("audio", help="Audio file path.")
     s.add_argument("--chunk-s", type=float, default=20.0)
