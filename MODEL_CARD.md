@@ -45,6 +45,7 @@ model-index:
 <p align="center"><em>Built on <a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B">Qwen3-ASR-1.7B</a>, fine-tuned for Egyptian dialect and Arabic ↔ English code-switching.</em></p>
 
 <p align="center">
+  <a href="https://github.com/MohammedAly22/qwencleo-asr"><img src="https://img.shields.io/badge/GitHub-qwencleo--asr-181717?logo=github&logoColor=white" alt="GitHub"/></a>
   <a href="https://pypi.org/project/qwencleo-asr/"><img src="https://img.shields.io/badge/PyPI-qwencleo--asr-3775A9?logo=pypi&logoColor=white" alt="PyPI"/></a>
   <a href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B"><img src="https://img.shields.io/badge/Base-Qwen3--ASR--1.7B-615CED" alt="Base model"/></a>
 </p>
@@ -214,6 +215,7 @@ models transliterate English into broken Arabic or drop words entirely.
 
 ## 🔗 Links
 
+- **💻 GitHub:** [`MohammedAly22/qwencleo-asr`](https://github.com/MohammedAly22/qwencleo-asr) — package source, server, Gradio app, vLLM streaming guide.
 - **📦 PyPI:** [`qwencleo-asr`](https://pypi.org/project/qwencleo-asr/)
 - **🧱 Base:** [Qwen3-ASR-1.7B](https://huggingface.co/Qwen/Qwen3-ASR-1.7B) · [Qwen3-ASR repo](https://github.com/QwenLM/Qwen3-ASR)
 

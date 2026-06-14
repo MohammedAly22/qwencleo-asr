@@ -299,6 +299,14 @@ qwen-asr-demo-streaming \
 
 ---
 
+## 📓 Examples (Colab)
+
+Runnable notebooks in [`examples/`](examples/) — quick start, chunked
+transcription, FastAPI server, Gradio demo, and vLLM streaming. Each opens in
+Colab and runs cell by cell. See [`examples/README.md`](examples/README.md).
+
+---
+
 ## 🔗 Links
 
 - **🤗 Model card:** [`mohammedaly22/QwenCleo-ASR`](https://huggingface.co/mohammedaly22/QwenCleo-ASR)
