@@ -11,3 +11,4 @@ venv/
 .DS_Store
 results/*.jsonl
 PUBLISHING.md
+examples/_build_notebooks.py

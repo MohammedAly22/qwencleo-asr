@@ -8,8 +8,10 @@
 
 [![🤗 Model](https://img.shields.io/badge/🤗%20Model-mohammedaly22/QwenCleo--ASR-D4AF37)](https://huggingface.co/mohammedaly22/QwenCleo-ASR)
 [![PyPI](https://img.shields.io/badge/PyPI-qwencleo--asr-3775A9?logo=pypi&logoColor=white)](https://pypi.org/project/qwencleo-asr/)
+[![GitHub](https://img.shields.io/badge/GitHub-qwencleo--asr-181717?logo=github&logoColor=white)](https://github.com/MohammedAly22/qwencleo-asr)
 [![Base model](https://img.shields.io/badge/Base-Qwen3--ASR--1.7B-615CED)](https://huggingface.co/Qwen/Qwen3-ASR-1.7B)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MohammedAly22/qwencleo-asr/blob/main/examples/01_quickstart.ipynb)
 
 </div>
 
