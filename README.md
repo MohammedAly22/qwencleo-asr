@@ -301,9 +301,16 @@ qwen-asr-demo-streaming \
 
 ## 📓 Examples (Colab)
 
-Runnable notebooks in [`examples/`](examples/) — quick start, chunked
-transcription, FastAPI server, Gradio demo, and vLLM streaming. Each opens in
-Colab and runs cell by cell. See [`examples/README.md`](examples/README.md).
+Runnable notebooks in [`examples/`](examples/) — open one, set the runtime to
+**GPU** (*Runtime → Change runtime type → GPU*), and run the cells top to bottom.
+
+| Notebook | What it shows | Open in Colab |
+|---|---|:---:|
+| **Quick Start** | Install, transcribe, batch, CLI | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MohammedAly22/qwencleo-asr/blob/main/examples/01_quickstart.ipynb) |
+| **Chunked transcription** | Long-audio windowing + mic-style frames | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MohammedAly22/qwencleo-asr/blob/main/examples/02_chunked_transcription.ipynb) |
+| **FastAPI server** | Run the server, call it over HTTP | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MohammedAly22/qwencleo-asr/blob/main/examples/03_fastapi_server.ipynb) |
+| **Gradio demo** | Browser UI with a public share link | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MohammedAly22/qwencleo-asr/blob/main/examples/04_gradio_demo.ipynb) |
+| **vLLM streaming** | True token-by-token streaming + OpenAI API | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/MohammedAly22/qwencleo-asr/blob/main/examples/05_vllm_streaming.ipynb) |
 
 ---
 
