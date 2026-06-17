@@ -11,41 +11,51 @@ upstream docs say `Qwen/Qwen3-ASR-1.7B`, use `mohammedaly22/QwenCleo-ASR`.
 
 ---
 
-## Install vLLM
-
-> ⚠️ **CUDA 13 required.** The vLLM **nightly** that carries Qwen3-ASR support is
-> built against **CUDA 13** (`libcudart.so.13`). On a CUDA 12.x box it fails to
-> import (`ImportError: libcudart.so.13`). Run vLLM on a CUDA-13 runtime; on
-> CUDA 12.x use the [FastAPI server](app.py) instead — it needs no vLLM and gives
-> the same transcriptions (just without token-by-token streaming).
-
-vLLM provides day-0 support for the Qwen3-ASR architecture. Use the **nightly**
-wheel (recommended via `uv`):
+## Install vLLM + serve (recommended: the built-in commands)
 
 ```bash
-uv venv
-source .venv/bin/activate
-uv pip install -U vllm --pre \
+pip install qwencleo-asr
+qwencleo install-vllm     # installs the vLLM nightly (cu129)
+qwencleo serve            # launches the server with the right flags
+```
+
+`qwencleo serve` runs `vllm serve` with `VLLM_USE_FLASHINFER_SAMPLER=0` (the
+FlashInfer sampler JIT-needs `nvcc`, often absent) and
+`--gpu-memory-utilization 0.8`. Override with `--port`, `--gpu-memory-utilization`,
+`--max-model-len`, `--dtype`.
+
+> ⚠️ **Requirements.** (1) The vLLM nightly is **cu129-only** — `cu129` runtime
+> libs are forward-compatible with CUDA-12.x drivers; the bare `/nightly` index
+> serves a CUDA-13 wheel that dies with `libcudart.so.13`. (2) **Ampere-or-newer
+> GPU** (L4 / A100 / H100) — FlashInfer doesn't run on the T4 (sm_75).
+
+### What the commands run (manual equivalent)
+
+```bash
+# qwencleo install-vllm  ==
+pip install -U uv
+uv pip install --system -U vllm --pre \
     --extra-index-url https://wheels.vllm.ai/nightly/cu129 \
     --extra-index-url https://download.pytorch.org/whl/cu129 \
     --index-strategy unsafe-best-match
-uv pip install "vllm[audio]"      # audio dependencies
-```
+uv pip install --system "vllm[audio]" openai httpx
 
-Or, with the QwenCleo extra:
-
-```bash
-pip install "qwencleo-asr[vllm]"
+# qwencleo serve  ==
+VLLM_USE_FLASHINFER_SAMPLER=0 \
+vllm serve mohammedaly22/QwenCleo-ASR --gpu-memory-utilization 0.8
+# 2x GPU tensor parallel: add  --tensor-parallel-size 2
 ```
 
 ---
 
-## Online serving
+## Interacting with the server
+
+Once up (`qwencleo serve`), interact in several ways.
+
+### Shell
 
 ```bash
-vllm serve mohammedaly22/QwenCleo-ASR
-# 2x H100 tensor parallel:
-vllm serve mohammedaly22/QwenCleo-ASR --tensor-parallel-size 2 --dtype bfloat16
+qwencleo stream-vllm clip.wav --port 8000     # token-by-token to stdout
 ```
 
 Once up, interact in several ways.
@@ -55,20 +65,20 @@ Once up, interact in several ways.
 ```python
 from qwencleo_asr import stream_vllm, transcribe_vllm
 
-# TRUE streaming — deltas arrive as they are generated
-for delta in stream_vllm("clip.wav", language="Arabic"):
+# TRUE streaming — deltas arrive as they are generated (prefix stripped for you)
+for delta in stream_vllm("clip.wav", port=8000, language="Arabic"):
     print(delta, end="", flush=True)
 
 # one-shot
-print(transcribe_vllm("clip.wav"))
+print(transcribe_vllm("clip.wav", port=8000))
 ```
 
 …or the same thing straight off the model object:
 
 ```python
 from qwencleo_asr import QwenCleoASR
-asr = QwenCleoASR()                       # local model for transcribe()
-for delta in asr.stream("clip.wav"):      # delegates to the vLLM server
+asr = QwenCleoASR()                              # local model for transcribe()
+for delta in asr.stream("clip.wav", port=8000):  # delegates to the vLLM server
     print(delta, end="", flush=True)
 ```
 

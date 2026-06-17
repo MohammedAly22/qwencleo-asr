@@ -126,8 +126,9 @@ class QwenCleoASR:
     def stream(
         self,
         audio: str,
+        port: int = 8000,
         *,
-        base_url: str = "http://localhost:8000/v1",
+        base_url: Optional[str] = None,
         language: Optional[str] = "__default__",
         model_id: Optional[str] = None,
         max_tokens: int = 256,
@@ -141,11 +142,15 @@ class QwenCleoASR:
         Then:
 
             asr = QwenCleoASR()
-            for delta in asr.stream("clip.wav"):
+            for delta in asr.stream("clip.wav", port=8000):
                 print(delta, end="", flush=True)
 
+        audio    : path or URL to the audio.
+        port     : port the vLLM server listens on (default 8000). Ignored if
+                   `base_url` is given explicitly.
         Unlike `transcribe()` (which runs the local HF model) this connects to
-        the vLLM OpenAI-compatible endpoint and yields text as it is generated.
+        the vLLM OpenAI-compatible endpoint and yields the transcript text as it
+        is generated (the `language X<asr_text>` prefix is stripped for you).
         """
         from .vllm_backend import stream_vllm
 
@@ -154,6 +159,7 @@ class QwenCleoASR:
         return stream_vllm(
             audio,
             base_url=base_url,
+            port=port,
             model=model_id or self.model_id,
             language=language,
             max_tokens=max_tokens,

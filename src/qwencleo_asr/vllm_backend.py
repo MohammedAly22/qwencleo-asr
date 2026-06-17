@@ -50,7 +50,8 @@ def _client(base_url: str, api_key: str = "EMPTY"):
 def stream_vllm(
     audio: str,
     *,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: Optional[str] = None,
+    port: int = 8000,
     model: str = DEFAULT_MODEL,
     language: Optional[str] = "Arabic",
     api_key: str = "EMPTY",
@@ -58,11 +59,19 @@ def stream_vllm(
 ) -> Iterator[str]:
     """Yield text deltas as the vLLM server transcribes — TRUE streaming.
 
+    base_url: full OpenAI base URL; if None, built from `port`
+              (http://localhost:<port>/v1).
+
+    The model emits a `language X<asr_text>` prefix before the transcript; we
+    strip it on the fly so callers get only the spoken text.
+
     Example
     -------
-    >>> for delta in stream_vllm("clip.wav"):
+    >>> for delta in stream_vllm("clip.wav", port=8000):
     ...     print(delta, end="", flush=True)
     """
+    if base_url is None:
+        base_url = f"http://localhost:{port}/v1"
     client = _client(base_url, api_key)
     content = [{"type": "audio_url",
                 "audio_url": {"url": _audio_to_data_url(audio)}}]
@@ -76,21 +85,44 @@ def stream_vllm(
         max_tokens=max_tokens,
         stream=True,
     )
+
+    # Strip the leading "language X<asr_text>" prefix, which can span several
+    # streamed chunks. Buffer until we pass the marker, then yield cleanly.
+    marker = "<asr_text>"
+    buf = ""
+    passed = False
     for event in stream:
         delta = event.choices[0].delta.content
-        if delta:
+        if not delta:
+            continue
+        if passed:
             yield delta
+            continue
+        buf += delta
+        idx = buf.find(marker)
+        if idx != -1:
+            passed = True
+            tail = buf[idx + len(marker):]
+            if tail:
+                yield tail
+        # else: still inside the prefix; keep buffering (don't yield)
+    if not passed and buf:
+        # no marker ever seen — emit whatever we buffered (be safe)
+        yield buf
 
 
 def transcribe_vllm(
     audio: str,
     *,
-    base_url: str = DEFAULT_BASE_URL,
+    base_url: Optional[str] = None,
+    port: int = 8000,
     model: str = DEFAULT_MODEL,
     api_key: str = "EMPTY",
 ) -> str:
     """One-shot transcription via the vLLM OpenAI transcription API."""
     import httpx
+    if base_url is None:
+        base_url = f"http://localhost:{port}/v1"
     client = _client(base_url, api_key)
     if audio.startswith(("http://", "https://")):
         data = httpx.get(audio).content

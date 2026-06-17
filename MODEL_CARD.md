@@ -98,19 +98,20 @@ print(result[0].text)
 
 ## ⚡ Streaming & serving (vLLM)
 
-QwenCleo inherits Qwen3-ASR's **true token-by-token streaming** via vLLM. Start a
-server, then stream straight off the model:
+QwenCleo inherits Qwen3-ASR's **true token-by-token streaming** via vLLM
+(needs an Ampere-or-newer GPU: L4 / A100 / H100).
 
 ```bash
-pip install "qwencleo-asr[vllm]"          # vLLM nightly recommended
-vllm serve mohammedaly22/QwenCleo-ASR
+pip install qwencleo-asr
+qwencleo install-vllm     # vLLM nightly (cu129) — only build with Qwen3-ASR support
+qwencleo serve            # OpenAI-compatible server on :8000
 ```
 
 ```python
 from qwencleo_asr import QwenCleoASR
 
 asr = QwenCleoASR()
-for delta in asr.stream("clip.wav"):       # real streaming via the vLLM server
+for delta in asr.stream("clip.wav", port=8000):   # real streaming via vLLM
     print(delta, end="", flush=True)
 ```
 

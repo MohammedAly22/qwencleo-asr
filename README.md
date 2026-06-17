@@ -291,21 +291,27 @@ for chunk in stream_file(asr, "long_podcast.wav", chunk_s=20, overlap_s=2):
 
 ### Python — true streaming (vLLM)
 
-QwenCleo inherits Qwen3-ASR's **real token-by-token streaming** via vLLM. Start a
-server (see [`server/vllm_serve.md`](server/vllm_serve.md)):
+QwenCleo inherits Qwen3-ASR's **real token-by-token streaming** via vLLM. Two
+one-time setup commands, then stream from Python.
 
 ```bash
-pip install "qwencleo-asr[vllm]"          # vLLM nightly recommended — see docs
-vllm serve mohammedaly22/QwenCleo-ASR
+qwencleo install-vllm     # installs the vLLM nightly (cu129) — the only build
+                          # with Qwen3-ASR support (not on PyPI; uses uv)
+qwencleo serve            # launches the server (sets the right flags for you:
+                          # VLLM_USE_FLASHINFER_SAMPLER=0, --gpu-memory-utilization 0.8)
 ```
 
-Then stream straight off the model object — deltas arrive as they're generated:
+> Needs an **Ampere-or-newer GPU** (L4 / A100 / H100). See
+> [`server/vllm_serve.md`](server/vllm_serve.md) for details and manual flags.
+
+Then stream straight off the model object — deltas arrive as they're generated
+(the `language X<asr_text>` prefix is stripped for you):
 
 ```python
 from qwencleo_asr import QwenCleoASR
 
 asr = QwenCleoASR()
-for delta in asr.stream("clip.wav"):       # talks to the vLLM server
+for delta in asr.stream("clip.wav", port=8000):   # talks to the vLLM server
     print(delta, end="", flush=True)
 ```
 
@@ -314,11 +320,17 @@ Or use the helpers directly:
 ```python
 from qwencleo_asr import stream_vllm, transcribe_vllm, VLLMOffline
 
-for delta in stream_vllm("clip.wav", language="Arabic"):
+for delta in stream_vllm("clip.wav", port=8000, language="Arabic"):
     print(delta, end="", flush=True)
 
-print(transcribe_vllm("clip.wav"))         # one-shot via the server
-print(VLLMOffline().transcribe("clip.wav"))  # in-process, no server
+print(transcribe_vllm("clip.wav", port=8000))   # one-shot via the server
+print(VLLMOffline().transcribe("clip.wav"))      # in-process, no server
+```
+
+From the shell:
+
+```bash
+qwencleo stream-vllm clip.wav --port 8000        # token-by-token to stdout
 ```
 
 ### CLI
@@ -353,8 +365,8 @@ python app/gradio_app.py        # http://localhost:7860  (mic + file upload)
 Full guide in **[`server/vllm_serve.md`](server/vllm_serve.md)**. In short:
 
 ```bash
-pip install "qwencleo-asr[vllm]"           # vLLM nightly recommended (see docs)
-vllm serve mohammedaly22/QwenCleo-ASR
+qwencleo install-vllm      # vLLM nightly (cu129) — the only build with Qwen3-ASR support
+qwencleo serve             # OpenAI-compatible server on :8000
 ```
 
 OpenAI-compatible transcription:

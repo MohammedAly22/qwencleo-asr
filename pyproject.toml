@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qwencleo-asr"
-version = "0.1.0"
+version = "0.2.0"
 description = "QwenCleo-ASR — Egyptian Arabic & code-switching speech recognition, built on Qwen3-ASR."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -27,11 +27,18 @@ dependencies = [
 server = ["fastapi", "uvicorn[standard]", "python-multipart"]
 # `pip install qwencleo-asr[app]` for the Gradio demo.
 app = ["gradio>=4.0"]
-# `pip install qwencleo-asr[vllm]` for the vLLM backend + client.
-# NOTE: for Qwen3-ASR/QwenCleo the vLLM *nightly* is recommended — see
-# server/vllm_serve.md. This floor is for the client helpers to work.
-vllm = ["vllm>=0.6.0", "openai", "httpx"]
-# client-only (talk to an existing vLLM server without installing vllm itself)
+# `pip install qwencleo-asr[vllm]` installs ONLY the OpenAI-compatible client.
+# IMPORTANT: do NOT let pip pull a stable vLLM — Qwen3-ASR support lives only in
+# the vLLM *nightly (cu129)*, which is not on PyPI. A stable `pip install vllm`
+# (e.g. 0.7.x) is too old and fails with "Transformers does not recognize
+# qwen3_asr". Install the nightly manually (see server/vllm_serve.md):
+#   uv pip install -U vllm --pre \
+#     --extra-index-url https://wheels.vllm.ai/nightly/cu129 \
+#     --extra-index-url https://download.pytorch.org/whl/cu129 \
+#     --index-strategy unsafe-best-match
+#   uv pip install "vllm[audio]"
+vllm = ["openai", "httpx"]
+# alias kept for back-compat
 vllm-client = ["openai", "httpx"]
 # everything (serving + app + vllm client; not vllm itself)
 all = ["fastapi", "uvicorn[standard]", "python-multipart", "gradio>=4.0",
