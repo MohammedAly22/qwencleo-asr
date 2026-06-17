@@ -62,23 +62,34 @@ class QwenCleoASR:
         default_language: Optional[str] = "Arabic",
         quiet: bool = True,
     ):
-        if quiet:
-            _quiet_transformers()
+        # Store config; defer the heavy local-model load until transcribe() is
+        # actually called. This lets `stream()` (which only talks to the vLLM
+        # server over HTTP) work without importing/loading qwen_asr at all.
+        self.model_id = model_id
+        self.default_language = default_language
+        self._device = device
+        self._dtype = dtype
+        self._max_new_tokens = max_new_tokens
+        self._quiet = quiet
+        self._model = None
 
+    def _ensure_model(self):
+        """Lazily load the local HF model on first transcribe() call."""
+        if self._model is not None:
+            return self._model
+        if self._quiet:
+            _quiet_transformers()
         import torch
         from qwen_asr import Qwen3ASRModel
 
-        torch_dtype = getattr(torch, dtype)
-        self.model_id = model_id
-        self.default_language = default_language
-
-        logger.info("loading %s on %s (%s)", model_id, device, dtype)
+        logger.info("loading %s on %s (%s)", self.model_id, self._device, self._dtype)
         self._model = Qwen3ASRModel.from_pretrained(
-            model_id,
-            dtype=torch_dtype,
-            device_map=device,
-            max_new_tokens=max_new_tokens,
+            self.model_id,
+            dtype=getattr(torch, self._dtype),
+            device_map=self._device,
+            max_new_tokens=self._max_new_tokens,
         )
+        return self._model
 
     # ------------------------------------------------------------------ #
     def transcribe(
@@ -100,12 +111,13 @@ class QwenCleoASR:
             language = self.default_language
         lang_arg = None if language in (None, "None") else language
 
+        model = self._ensure_model()
         single = isinstance(audio, str)
         items = [audio] if single else list(audio)
 
         results: List[TranscriptionResult] = []
         for path in items:
-            out = self._model.transcribe(audio=path, language=lang_arg)
+            out = model.transcribe(audio=path, language=lang_arg)
             r = out[0]
             text = r.text
             if normalize:

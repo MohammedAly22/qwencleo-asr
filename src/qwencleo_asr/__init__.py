@@ -15,7 +15,7 @@ from .normalize import normalize
 # the names here is cheap because vllm_backend defers its heavy imports.
 from .vllm_backend import stream_vllm, transcribe_vllm, VLLMOffline
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 __all__ = [
     "QwenCleoASR",

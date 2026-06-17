@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "qwencleo-asr"
-version = "0.2.0"
+version = "0.2.1"
 description = "QwenCleo-ASR — Egyptian Arabic & code-switching speech recognition, built on Qwen3-ASR."
 readme = "README.md"
 requires-python = ">=3.9"
